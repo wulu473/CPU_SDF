@@ -42,9 +42,9 @@ void getLineNormal(double* norm, double aX, double aY, double bX, double bY){
   norm[0] = -(bY - aY);
   norm[1] = bX - aX;
 
-  double mag = rsqrt((norm[0]*norm[0])+(norm[1]*norm[1]));
-  norm[0] *= mag;
-  norm[1] *= mag;
+  double mag = std::sqrt((norm[0]*norm[0])+(norm[1]*norm[1]));
+  norm[0] /= mag;
+  norm[1] /= mag;
 }
 
 //Loop trhough cells in rectangular region of the mesh and determine if cell centres are within an edge extrusion. If so, find the distance to the edge and record the minimum magnitude distance
@@ -80,9 +80,9 @@ void setEdgeSDF(bool positive, double* sdf, double* rect_x, double* rect_y, doub
 	  dist = -dist;
 	}
 	//If distance has small enough magnitude
-	if(abs(dist) < maxDistance){
+	if(std::abs(dist) < maxDistance){
 	  //If distance magnitude is smaller than previous value
-	  if(abs(sdf[y * width + x]) > abs(dist)){
+	  if(std::abs(sdf[y * width + x]) > std::abs(dist)){
 	    //Write distance to memory with appropriate sign
 	    sdf[y * width + x] = dist;
 	  }
@@ -107,6 +107,15 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
   //Coordinates of current cell
   double x_;
   double y_;
+ 
+  //Sign of distance 
+  int sign;
+
+  if(positive){
+    sign = 1;
+  }else{
+    sign = -1;
+  }
 
   //For all cells in region
   for(int y = startY; y <= endY; y++){
@@ -118,11 +127,11 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
       //If cell is in extrusion
       if(pointInTriangle(x_, y_, trng_x, trng_y, normA, normB, normC, limit)){
 	//Find distance to vertex
-	double dist = sqrt((x_ - triangleA[0]) * (x_ - triangleA[0]) + (y_ - triangleA[1]) * (y_ - triangleA[1]));
+	double dist = std::sqrt((x_ - trng_x[0]) * (x_ - trng_x[0]) + (y_ - trng_y[0]) * (y_ - trng_y[0]));
 	//If distance has small enough magnitude
 	if(dist < maxDistance){
 	  //If distance magnitude is smaller than previous value
-	  if(abs(sdf[y * width + x]) > dist){
+	  if(std::abs(sdf[y * width + x]) > dist){
 	    //Write distance to memory with appropriate sign
 	    sdf[y * width * x] = sign * dist;
 	  }
