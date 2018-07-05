@@ -329,10 +329,10 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
   //sdf has distance values from all edge and vertex extrusions
 
   //Sweep along rows and columns to fill in unset values
-  fillUnsetValues(sdf, width, height);  
+  //fillUnsetValues(sdf, width, height);  
 
   //Overwrite infinity with maxDist of correct signe
-  overWriteInfinityKernel(sdf, maxDistance, length);
+  //overWriteInfinityKernel(sdf, maxDistance, length);
 
   //Optional
   //overWriteSmallSDFKernel(sdf, minValue, length);
