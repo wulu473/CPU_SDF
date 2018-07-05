@@ -47,6 +47,46 @@ void getLineNormal(double* norm, double aX, double aY, double bX, double bY){
   norm[1] *= mag;
 }
 
+//Loop trhough cells in rectangular region of the mesh and determine if cell centres are within an edge extrusion. If so, find the distance to the edge and record the minimum magnitude distance
+void setEdgeSDF(bool positive, real* sdf, double* rect_x, double* rect_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
+
+  //Inward pointing normals of the extrusion
+  double normA[2];
+  double normB[2];
+  double normC[2];
+  double normD[2];
+
+  getLineNormal(normA, rect_x[0], rect_y[0], rect_x[1], rect_y[1]);
+  getLineNormal(normB, rect_x[1], rect_y[1], rect_x[2], rect_y[2]);
+  getLineNormal(normC, rect_x[2], rect_y[2], rect_x[3], rect_y[3]);
+  getLineNormal(normD, rect_x[3], rect_y[3], rect_x[0], rect_y[0]);
+  //For all cells in region
+  for(int y = startY; y <= endY; y++){
+    for(int x = startX; x <= endX; x++){
+
+      x_ = xMin + x * dx + 0.5 * dx;
+      y_ = yMin + y * dy + 0.5 * dy;
+
+      //If cell is in extrusion
+      if(pointInRectangle(x_, y_, rect_x, rect_y, normA, normB, normC, normD, limit)){
+	//Find distance to edge
+	double dist = (normD[0] * (rect_x[0], rect_y[0]-x_) + (normD[1]) * (rect_x[0], rect_y[0]-y_));
+	if(positive){
+	  dist = -dist;
+	}
+	//If distance has small enough magnitude
+	if(abs(dist) < maxDistance){
+	  //If distance magnitude is smaller than previous value
+	  if(abs(sdf[y * width + x]) > abs(dist)){
+	    //Write distance to memory with appropriate sign
+	    sdf[y * width + x] = dist;
+	  }
+	}
+      }
+    }
+  } 
+}
+
 //Loop trhough cells in rectangular region of the mesh and determine if cell centres are within a vertex extrusion. If so, find the distance to the vertex and record the minimum magnitude distance
 void setVertexSDF(bool positive, real* sdf, double* trng_x, double* trng_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
 
@@ -85,44 +125,4 @@ void setVertexSDF(bool positive, real* sdf, double* trng_x, double* trng_y, doub
       } 
     }
   }
-}
-
-//Loop trhough cells in rectangular region of the mesh and determine if cell centres are within a edge extrusion. If so, find the distance to the edge and record the minimum magnitude distance
-void setEdgeSDF(bool positive, real* sdf, double* rect_x, double* rect_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
-
-  //Inward pointing normals of the extrusion
-  double normA[2];
-  double normB[2];
-  double normC[2];
-  double normD[2];
-
-  getLineNormal(normA, rect_x[0], rect_y[0], rect_x[1], rect_y[1]);
-  getLineNormal(normB, rect_x[1], rect_y[1], rect_x[2], rect_y[2]);
-  getLineNormal(normC, rect_x[2], rect_y[2], rect_x[3], rect_y[3]);
-  getLineNormal(normD, rect_x[3], rect_y[3], rect_x[0], rect_y[0]);
-  //For all cells in region
-  for(int y = startY; y <= endY; y++){
-    for(int x = startX; x <= endX; x++){
-
-      x_ = xMin + x * dx + 0.5 * dx;
-      y_ = yMin + y * dy + 0.5 * dy;
-
-      //If cell is in extrusion
-      if(pointInRectangle(x_, y_, rect_x, rect_y, normA, normB, normC, normD, limit)){
-	//Find distance to edge
-	double dist = (normD[0] * (rect_x[0], rect_y[0]-x_) + (normD[1]) * (rect_x[0], rect_y[0]-y_));
-	if(positive){
-	  dist = -dist;
-	}
-	//If distance has small enough magnitude
-	if(abs(dist) < maxDistance){
-	  //If distance magnitude is smaller than previous value
-	  if(abs(sdf[y * width + x]) > abs(dist)){
-	    //Write distance to memory with appropriate sign
-	    sdf[y * width + x] = dist;
-	  }
-	}
-      }
-    }
-  } 
 }

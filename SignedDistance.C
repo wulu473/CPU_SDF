@@ -1,4 +1,4 @@
-//Limits forsmall values
+//Limits for small values
 const static double areaLimit = 1.0E-8;
 const static double zeroOffSet = 1.0E-6;
 
@@ -101,8 +101,6 @@ void getTriangleCoords(double vertex_x, double vertex_y, double* trng_x, double*
  */
 void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int left, int right, int bottom, int top, const double* vertices, int numVertices, double maxDist){
 
-  //Initialise all values in sdf to inf
-
   int width = right - left;
   int height = top - bottom;
 
@@ -113,6 +111,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
   double xMax = xMin + width * dx;
   double yMax = yMin + height * dy;
 
+  //Initialise all values in sdf to inf
   for(int i = 0; i < length; i++){
     sdf[i] = std::numeric_limits<double>::infinity();
   }
