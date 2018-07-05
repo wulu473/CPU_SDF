@@ -32,9 +32,9 @@ void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
 
 void fillUnsetValues(double* sdf, int width, int height){
 
-//TODO
-//Travel along rows and the columns from left -> right and then right -> left
-//Once you see a transition from positive to negative between element n and n+1, set signs of following values to negative, until there is a transition to positive, in which case switch to positive sign
+  //TODO
+  //Travel along rows and the columns from left -> right and then right -> left
+  //Once you see a transition from positive to negative between element n and n+1, set signs of following values to negative, until there is a transition to positive, in which case switch to positive sign
 
 }
 
@@ -116,6 +116,9 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     sdf[i] = std::numeric_limits<double>::infinity();
   }
 
+  //Epsilon for point-in-polygon test
+  double limit = 0.01 * min(dx, dy);
+
   //Coordinates of a vertex
   double vertex_x;
   double vertex_y;
@@ -140,8 +143,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
   double boundMax[2];
 
   //Dimensions of extrusion bounding volume
-  int width;
-  int height;
+  int b_width;
+  int b_height;
 
   //sdf is infinity everywhere
 
@@ -181,142 +184,145 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     //Get positive edge extrusion coordinates
     getRectangleCoords(edge_x, edge_y, rect_x, rect_y, out_norm_sin, out_norm_cos, polygonExtent);
 
-    //Get the interection of the extrusion boiunding volume and the domain
+    //Get the interection of the extrusion bounding volume and the domain
     getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
 
+    //Find the indices of cells at the edges of the bounding volume intersection
     boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
     boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
 
     boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
     boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
 
-    width = boundMax[0] - boundMin[0];
-    height = boundMax[1] - boundMin[1];
+    b_width = boundMax[0] - boundMin[0];
+    b_height = boundMax[1] - boundMin[1];
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
-    if((width > 0) && (height > 0)){
+    if((b_width > 0) && (b_height > 0)){
       //Update positive distances for grid points in edge rectangle
-      updateRectangle(true, sdf, rect_x, rect_y);
-    }
+      setEdgeSDF(true, sdf, rect_x, rect_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
+      }
 
-    //Get negative edge extrusion coordinates
-    getRectangleCoords(edge_x, edge_y, rect_x, rect_y, in_norm_sin, in_norm_cos, polygonExtent);
+      //Get negative edge extrusion coordinates
+      getRectangleCoords(edge_x, edge_y, rect_x, rect_y, in_norm_sin, in_norm_cos, polygonExtent);
 
-    //Get the interection of the extrusion boiunding volume and the domain
-    getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
+      //Get the interection of the extrusion bounding volume and the domain
+      getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
 
-    boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
-    boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
-
-    boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
-    boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
-
-    width = boundMax[0] - boundMin[0];
-    height = boundMax[1] - boundMin[1];
-
-    //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
-    if((width > 0) && (height > 0)){
-      //Update negative distances for grid points in edge rectangle
-      updateRectangle(false, sdf, rect_x, rect_y);
-    }
-  }
-
-  //sdf has distance information from all edges
-
-  //-------------------- VERTEX --------------------
-
-  //Vector to previous vertex
-  double toPrev[2];
-  //Vector to next vertex
-  double toNext[2];
-
-  //Loop over vertices, constructing +ve and -ve trangles and scan convert the grid points
-  for(int i = 0; i < (numVertices); i++){
-
-    //Indices of adjacent vertices (vertices are globally ordered clockwise)
-    int previousVertex = i - 1;
-    if(i == 0){
-      previousVertex = numVertices - 1;
-    }
-
-    int nextVertex = i + 1;
-    if(i == (numVertices - 1)){
-      previousVertex = 0;
-    }
-
-    //Construct adjacent edge vectors to calculate the vertex angle 
-    toPrev[0] = vertices[2*previous_vertex_index] - vertices[2*i];
-    toPrev[1] = vertices[2*previous_vertex_index+1] - vertices[2*i+1];
-
-    toNext[0] = vertices[2*next_vertex_index] - vertices[2*i];
-    toNext[1] = vertices[2*next_vertex_index+1] - vertices_y[2*i+1];
-
-    //Calculate vertex angle. atan2, cross and dot products are combined to ensure we get a sense of the sign of the vertex angle
-    double vertexAngleDeg = atan2(((toNext[0] * toPrev[1]) - (toPrev[0] * toNext[1])), (toPrev[0]*toNext[0] + toPrev[1]*toNext[1])) * 180.0 / PI;
-
-    //atan2 returns values in range [-pi, pi] with a discontinuity at the transition. Adding 360 degrees to negative angles gives values of the whole  unit circle. 
-    if(vertexAngleDeg < 0){
-      vertexAngleDeg = vertexAngleDeg + 360.0;
-    }
-
-    //Vertices with angles > 180 degrees are convex and require positive extrusions. Angles < 180 degrees denote concave vertices requiring negative extrusions. Angles of 180 degrees are flat and need no extrusions
-    if(vertexAngleDeg > 180.0){
-      //Get positive distance triangle coordinates
-      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDist);
-
-       //Get the interection of the extrusion boiunding volume and the domain
-      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
-
+      //Find the indices of cells at the edges of the bounding volume intersection
       boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
       boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
 
       boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
       boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
 
-      width = boundMax[0] - boundMin[0];
-      height = boundMax[1] - boundMin[1];
+      b_width = boundMax[0] - boundMin[0];
+      b_height = boundMax[1] - boundMin[1];
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
-      if((width > 0) && (height > 0)){
-        //Update positive distances for grid points in vertex rectangle
-        updateTriangle(true, sdf, trng_x, trng_y);
+      if((b_width > 0) && (b_height > 0)){
+	//Update negative distances for grid points in edge rectangle
+	setEdgeSDF(false, sdf, rect_x, rect_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
+	}
       }
 
-    }else if(vertexAngleDeg < 180.0){
-      //Get negative distance triangle coordinates
-      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], -outwardNormals[2*i], -outwardNormals[2*i+1], maxDist);
-     
-      //Get the interection of the extrusion boiunding volume and the domain
-      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
+      //sdf has distance information from all edges
 
-      boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
-      boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
+      //-------------------- VERTEX --------------------
 
-      boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
-      boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
+      //Vector to previous vertex
+      double toPrev[2];
+      //Vector to next vertex
+      double toNext[2];
 
-      width = boundMax[0] - boundMin[0];
-      height = boundMax[1] - boundMin[1];
+      //Loop over vertices, constructing +ve and -ve trangles and scan convert the grid points
+      for(int i = 0; i < (numVertices); i++){
 
-      //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
-      if((width > 0) && (height > 0)){
-        //Update positive distances for grid points in vertex rectangle
-        updateTriangle(false, sdf, trng_x, trng_y);
-      }
-    }
-  }
+	//Indices of adjacent vertices (vertices are globally ordered clockwise)
+	int previousVertex = i - 1;
+	if(i == 0){
+	  previousVertex = numVertices - 1;
+	}
 
-  //sdf has distance values from all edge and vertex extrusions
+	int nextVertex = i + 1;
+	if(i == (numVertices - 1)){
+	  previousVertex = 0;
+	}
 
-  //Sweep along rows and columns to fill in unset values
-  fillUnsetValues(sdf, width, height);
-  
+	//Construct adjacent edge vectors to calculate the vertex angle 
+	toPrev[0] = vertices[2*previous_vertex_index] - vertices[2*i];
+	toPrev[1] = vertices[2*previous_vertex_index+1] - vertices[2*i+1];
 
-  //Overwrite infinity with maxDist of correct signe
-  overWriteInfinityKernel(sdf, maxValue, length);
-    
-  //Optional
-  overWriteSmallSDFKernel(sdf, minValue, length);
+	toNext[0] = vertices[2*next_vertex_index] - vertices[2*i];
+	toNext[1] = vertices[2*next_vertex_index+1] - vertices_y[2*i+1];
 
-  free(outwardNormals);
-}
+	//Calculate vertex angle. atan2, cross and dot products are combined to ensure we get a sense of the sign of the vertex angle
+	double vertexAngleDeg = atan2(((toNext[0] * toPrev[1]) - (toPrev[0] * toNext[1])), (toPrev[0]*toNext[0] + toPrev[1]*toNext[1])) * 180.0 / PI;
+
+	//atan2 returns values in range [-pi, pi] with a discontinuity at the transition. Adding 360 degrees to negative angles gives values of the whole  unit circle. 
+	if(vertexAngleDeg < 0){
+	  vertexAngleDeg = vertexAngleDeg + 360.0;
+	}
+
+	//Vertices with angles > 180 degrees are convex and require positive extrusions. Angles < 180 degrees denote concave vertices requiring negative extrusions. Angles of 180 degrees are flat and need no extrusions
+	if(vertexAngleDeg > 180.0){
+	  //Get positive distance triangle coordinates
+	  getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDist);
+
+	  //Get the interection of the extrusion bounding volume and the domain
+	  getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
+
+	  //Find the indices of cells at the edges of the bounding volume intersection
+	  boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
+	  boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
+
+	  boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
+	  boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
+
+	  b_width = boundMax[0] - boundMin[0];
+	  b_height = boundMax[1] - boundMin[1];
+
+	  //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
+	  if((b_width > 0) && (b_height > 0)){
+	    //Update positive distances for grid points in vertex rectangle
+	    setVertexSDF(true, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit * 10.0){
+	    }
+
+	  }else if(vertexAngleDeg < 180.0){
+	    //Get negative distance triangle coordinates
+	    getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], -outwardNormals[2*i], -outwardNormals[2*i+1], maxDist);
+
+	    //Get the interection of the extrusion bounding volume and the domain
+	    getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
+
+	    //Find the indices of cells at the edges of the bounding volume intersection
+	    boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
+	    boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
+
+	    boundMax[0] = ceil((min(xMax, boundMax[0])-xMin)/dx); 
+	    boundMax[1] = ceil((min(yMax, boundMax[1])-yMin)/dy);  
+
+	    b_width = boundMax[0] - boundMin[0];
+	    b_height = boundMax[1] - boundMin[1];
+
+	    //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
+	    if((b_width > 0) && (b_height > 0)){
+	      //Update negative distances for grid points in vertex rectangle
+	      setVertexSDF(false, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit * 10.0){
+	      }
+	    }
+	  }
+
+	  //sdf has distance values from all edge and vertex extrusions
+
+	  //Sweep along rows and columns to fill in unset values
+	  fillUnsetValues(sdf, width, height);  
+
+	  //Overwrite infinity with maxDist of correct signe
+	  overWriteInfinityKernel(sdf, maxValue, length);
+
+	  //Optional
+	  overWriteSmallSDFKernel(sdf, minValue, length);
+
+	  free(outwardNormals);
+	}

@@ -48,7 +48,7 @@ void getLineNormal(double* norm, double aX, double aY, double bX, double bY){
 }
 
 //Loop trhough cells in rectangular region of the mesh and determine if cell centres are within an edge extrusion. If so, find the distance to the edge and record the minimum magnitude distance
-void setEdgeSDF(bool positive, real* sdf, double* rect_x, double* rect_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
+void setEdgeSDF(bool positive, double* sdf, double* rect_x, double* rect_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
 
   //Inward pointing normals of the extrusion
   double normA[2];
@@ -60,6 +60,11 @@ void setEdgeSDF(bool positive, real* sdf, double* rect_x, double* rect_y, double
   getLineNormal(normB, rect_x[1], rect_y[1], rect_x[2], rect_y[2]);
   getLineNormal(normC, rect_x[2], rect_y[2], rect_x[3], rect_y[3]);
   getLineNormal(normD, rect_x[3], rect_y[3], rect_x[0], rect_y[0]);
+
+  //Coordinates of current cell
+  double x_;
+  double y_;
+
   //For all cells in region
   for(int y = startY; y <= endY; y++){
     for(int x = startX; x <= endX; x++){
@@ -88,7 +93,7 @@ void setEdgeSDF(bool positive, real* sdf, double* rect_x, double* rect_y, double
 }
 
 //Loop trhough cells in rectangular region of the mesh and determine if cell centres are within a vertex extrusion. If so, find the distance to the vertex and record the minimum magnitude distance
-void setVertexSDF(bool positive, real* sdf, double* trng_x, double* trng_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
+void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, double xMin, double yMin, int startX, int startY, int endX, int endY, int width, double dx, double dy, double maxDistance, double limit){
 
   //Inward pointing normals of the extrusion
   double normA[2];
