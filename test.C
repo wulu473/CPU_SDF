@@ -5,10 +5,7 @@
 #include <cassert>
 #include <limits>
 #include <boost/test/unit_test.hpp>
-
-void getSDF(double* sdf, double xMin, double yMin,
-    double dx, double dy, int left, int right, int bottom, int top,
-    const double* vertices, int numVertices, double maxDist);
+#include "SignedDistance.hpp"
 
 BOOST_AUTO_TEST_SUITE(SignedDistanceTest)
 

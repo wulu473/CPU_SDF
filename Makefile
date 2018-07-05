@@ -1,5 +1,13 @@
 
-test: test.C SignedDistance.C 2DSDF.C
+main: main.C
+	@echo "Compiling..."
+	g++-6 -O0 -g -Wextra  -Wall -pedantic -std=c++11 \
+		$^ -o $@ \
+
+.PHONY: all
+all: main test
+
+test: test.C
 	@echo "Compiling..."
 	g++-6 -O0 -g -Wextra  -Wall -pedantic -std=c++11 \
 	       	-I/lsc/opt/modules/gcc-6.4.0/boost-1.63.0/include/ \
@@ -8,4 +16,4 @@ test: test.C SignedDistance.C 2DSDF.C
 
 .PHONY: clean
 clean:
-	rm -r test
+	rm -rf test main
