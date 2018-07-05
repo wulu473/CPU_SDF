@@ -196,7 +196,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((width > 0) && (height > 0)){
       //Update positive distances for grid points in edge rectangle
-      updateRectangle(true, sdf, rect_x, rect_y);
+      setEdgeSDF(true, sdf, rect_x, rect_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
     }
 
     //Get negative edge extrusion coordinates
@@ -217,7 +217,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((width > 0) && (height > 0)){
       //Update negative distances for grid points in edge rectangle
-      updateRectangle(false, sdf, rect_x, rect_y);
+      setEdgeSDF(false, sdf, rect_x, rect_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
     }
   }
 
@@ -279,7 +279,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((width > 0) && (height > 0)){
         //Update positive distances for grid points in vertex rectangle
-        updateTriangle(true, sdf, trng_x, trng_y);
+	setVertexSDF(true, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
       }
 
     }else if(vertexAngleDeg < 180.0){
@@ -300,8 +300,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((width > 0) && (height > 0)){
-        //Update positive distances for grid points in vertex rectangle
-        updateTriangle(false, sdf, trng_x, trng_y);
+        //Update negative distances for grid points in vertex rectangle
+	setVertexSDF(false, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit){
       }
     }
   }
