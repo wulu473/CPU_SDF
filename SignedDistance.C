@@ -184,6 +184,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     //Get the interection of the extrusion boiunding volume and the domain
     getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
 
+    //Find the indices of cells at the edges of the bounding volume intersection
     boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
     boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
 
@@ -267,6 +268,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
        //Get the interection of the extrusion boiunding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
 
+      //Find the indices of cells at the edges of the bounding volume intersection
       boundMin[0] = floor((max(xMin, boundMin[0])-xMin)/dx); 
       boundMin[1] = floor((max(yMin, boundMin[1])-yMin)/dy); 
 
@@ -309,8 +311,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
   //sdf has distance values from all edge and vertex extrusions
 
   //Sweep along rows and columns to fill in unset values
-  fillUnsetValues(sdf, width, height);
-  
+  fillUnsetValues(sdf, width, height);  
 
   //Overwrite infinity with maxDist of correct signe
   overWriteInfinityKernel(sdf, maxValue, length);
