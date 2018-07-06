@@ -63,13 +63,20 @@ void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double y
   boundMax[1] = std::min(boundMax[1], yMax);
 }
 
-void getRectangleCoords(double* edge_x, double* edge_y, double* rect_x, double* rect_y, double nx, double ny, double polygonExtent){
+void getRectangleCoords(bool positive, double* edge_x, double* edge_y, double* rect_x, double* rect_y, double nx, double ny, double polygonExtent){
 
   //First two coordinates of the rectangle are just the edge co-ordinates
-  rect_x[0] = edge_x[0]; 
-  rect_y[0] = edge_y[0];
-  rect_x[1] = edge_x[1]; 
-  rect_y[1] = edge_y[1];
+  if(positive){
+    rect_x[0] = edge_x[0]; 
+    rect_y[0] = edge_y[0];
+    rect_x[1] = edge_x[1]; 
+    rect_y[1] = edge_y[1];
+  }else{
+    rect_x[0] = edge_x[1]; 
+    rect_y[0] = edge_y[1];
+    rect_x[1] = edge_x[0]; 
+    rect_y[1] = edge_y[0];
+  }
 
   //To get to 3rd and 4th co-ordinates of the rectangle, travel along the unit normal
   rect_x[2] = rect_x[1] + polygonExtent * nx; 
@@ -78,16 +85,33 @@ void getRectangleCoords(double* edge_x, double* edge_y, double* rect_x, double* 
   rect_y[3] = rect_y[0] + polygonExtent * ny;
 }
 
-void getTriangleCoords(double vertex_x, double vertex_y, double* trng_x, double* trng_y, double n0_x, double n0_y, double n1_x, double n1_y, double polygonExtent){
+void getTriangleCoords(bool positive, double vertex_x, double vertex_y, double* trng_x, double* trng_y, double n0_x, double n0_y, double n1_x, double n1_y, double maxDistance){
+
+  double angle = atan2(((n1_x * n0_y) - (n0_x * n1_y)), (n0_x*n1_x + n0_y*n1_y));
+
+  //Side of triangle with height maxDistance
+  double polygonExtent = maxDistance / std::cos(angle/2.0); 
 
   trng_x[0] = vertex_x;
   trng_y[0] = vertex_y;
 
-  trng_x[1] = trng_x[0] + polygonExtent * n0_x; 
-  trng_y[1] = trng_y[0] + polygonExtent * n0_y;
+  if(positive){
 
-  trng_x[2] = trng_x[0] + polygonExtent * n1_x; 
-  trng_y[2] = trng_y[0] + polygonExtent * n1_y;
+    trng_x[1] = trng_x[0] + polygonExtent * n1_x; 
+    trng_y[1] = trng_y[0] + polygonExtent * n1_y;
+
+    trng_x[2] = trng_x[0] + polygonExtent * n0_x; 
+    trng_y[2] = trng_y[0] + polygonExtent * n0_y;
+
+  }else{
+
+    trng_x[1] = trng_x[0] + polygonExtent * n0_x; 
+    trng_y[1] = trng_y[0] + polygonExtent * n0_y;
+
+    trng_x[2] = trng_x[0] + polygonExtent * n1_x; 
+    trng_y[2] = trng_y[0] + polygonExtent * n1_y;
+  
+  }
 }
 
 /**
@@ -97,18 +121,13 @@ void getTriangleCoords(double vertex_x, double vertex_y, double* trng_x, double*
  *	@param yMin value at the bottommost edge of the local region
  *	@param dx cell length in x-dimension
  *	@param dy cell length in y-dimension
- *	@param left offset of leftmost cell wrt bounding volume
- *	@param right offset of rightmost+1 cell wrt bounding volume
- *	@param bottom offset of bottommost cell wrt bounding volume
- *	@param top offset of topmost+1 cell wrt bounding volume
+ *	@param width number of cells in x-direction
+ *	@param height number of cells in y-direction
  *	@param vertices list of vertices in geometry [x0, y0, x1, y1, ... x(n-1), y(n-1)]
  *	@param numVertices number of vertices in geometry
  *	@param maxDist maximum distance of SDF
  */
-void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int left, int right, int bottom, int top, const double* vertices, int numVertices, double maxDistance){
-
-  int width = right - left;
-  int height = top - bottom;
+void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int width, int height, const double* vertices, int numVertices, double maxDistance){
 
   //Number of cells in local domain
   int length = width * height;
@@ -195,7 +214,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     double in_norm_y = -out_norm_y;
 
     //Get positive edge extrusion coordinates
-    getRectangleCoords(edge_x, edge_y, rect_x, rect_y, out_norm_x, out_norm_y, maxDistance);
+    getRectangleCoords(true, edge_x, edge_y, rect_x, rect_y, out_norm_x, out_norm_y, maxDistance);
 
     //Get the interection of the extrusion bounding volume and the domain
     getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
@@ -217,7 +236,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
     }
 
     //Get negative edge extrusion coordinates
-    getRectangleCoords(edge_x, edge_y, rect_x, rect_y, in_norm_x, in_norm_y, maxDistance);
+    getRectangleCoords(false, edge_x, edge_y, rect_x, rect_y, in_norm_x, in_norm_y, maxDistance);
 
     //Get the interection of the extrusion bounding volume and the domain
     getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
@@ -277,13 +296,10 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
       vertexAngleDeg = vertexAngleDeg + 360.0;
     }
 
-    //TODO
-    //Vertex extrusion height has to be maxDist. Find the side of such a triangle to pass as polygonExtent to extruder
-
     //Vertices with angles > 180 degrees are convex and require positive extrusions. Angles < 180 degrees denote concave vertices requiring negative extrusions. Angles of 180 degrees are flat and need no extrusions
     if(vertexAngleDeg > 180.0){
       //Get positive distance triangle coordinates
-      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
+      getTriangleCoords(true, vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
     
       //Get the interection of the extrusion bounding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
@@ -306,7 +322,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
 
     }else if(vertexAngleDeg < 180.0){
       //Get negative distance triangle coordinates
-      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], -outwardNormals[2*i], -outwardNormals[2*i+1], maxDistance);
+      getTriangleCoords(false, vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], -outwardNormals[2*i], -outwardNormals[2*i+1], maxDistance);
 
       //Get the interection of the extrusion bounding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);

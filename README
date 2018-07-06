@@ -1,1 +1,6 @@
 2D signed distance field generator functions
+
+To compile: 
+  g++ main.C
+
+Produces data file "sdf.dat" which can be plotted by passing "plot_sdf.gp" to gnuplot

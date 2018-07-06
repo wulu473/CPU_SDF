@@ -100,11 +100,9 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
   double normB[2];
   double normC[2];
 
-  //TODO 
-  //Check edge order
-  getLineNormal(normA, trng_x[1], trng_y[1],trng_x[0], trng_y[0]);
-  getLineNormal(normB, trng_x[2], trng_y[2],trng_x[1], trng_y[1]);
-  getLineNormal(normC, trng_x[0], trng_y[0],trng_x[2], trng_y[2]);
+  getLineNormal(normA, trng_x[0], trng_y[0],trng_x[1], trng_y[1]);
+  getLineNormal(normB, trng_x[1], trng_y[1],trng_x[2], trng_y[2]);
+  getLineNormal(normC, trng_x[2], trng_y[2],trng_x[0], trng_y[0]);
 
   //Coordinates of current cell
   double x_;
