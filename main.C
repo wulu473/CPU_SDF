@@ -46,6 +46,8 @@ int main(int argc, char** argv){
     printf("\n");
   }
 
+  free(sdf);
+
   return 0;
 }
 
