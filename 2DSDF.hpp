@@ -75,7 +75,7 @@ void setEdgeSDF(bool positive, double* sdf, double* rect_x, double* rect_y, doub
       //If cell is in extrusion
       if(pointInRectangle(x_, y_, rect_x, rect_y, normA, normB, normC, normD, limit)){
 	//Find distance to edge
-	double dist = (normD[0] * (rect_x[0], rect_y[0]-x_) + (normD[1]) * (rect_x[0], rect_y[0]-y_));
+	double dist = (normA[0] * (rect_x[0]-x_) + (normA[1]) * (rect_y[0]-y_));
 	if(positive){
 	  dist = -dist;
 	}
@@ -100,9 +100,11 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
   double normB[2];
   double normC[2];
 
-  getLineNormal(normA, trng_x[0], trng_y[0],trng_x[1], trng_y[1]);
-  getLineNormal(normB, trng_x[1], trng_y[1],trng_x[2], trng_y[2]);
-  getLineNormal(normC, trng_x[2], trng_y[2],trng_x[0], trng_y[0]);
+  //TODO 
+  //Check edge order
+  getLineNormal(normA, trng_x[1], trng_y[1],trng_x[0], trng_y[0]);
+  getLineNormal(normB, trng_x[2], trng_y[2],trng_x[1], trng_y[1]);
+  getLineNormal(normC, trng_x[0], trng_y[0],trng_x[2], trng_y[2]);
 
   //Coordinates of current cell
   double x_;
@@ -133,7 +135,7 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
 	  //If distance magnitude is smaller than previous value
 	  if(std::abs(sdf[y * width + x]) > dist){
 	    //Write distance to memory with appropriate sign
-	    sdf[y * width * x] = sign * dist;
+	    sdf[y * width + x] = sign * dist;
 	  }
 	}
       } 

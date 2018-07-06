@@ -249,7 +249,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
   double toNext[2];
 
   //Loop over vertices, constructing +ve and -ve trangles and scan convert the grid points
-  for(int i = 0; i < (numVertices); i++){
+  for(int i = 0; i < numVertices; i++){
 
     //Indices of adjacent vertices (vertices are globally ordered clockwise)
     int previousVertex = i - 1;
@@ -259,12 +259,12 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
 
     int nextVertex = i + 1;
     if(i == (numVertices - 1)){
-      previousVertex = 0;
+      nextVertex = 0;
     }
 
     //Construct adjacent edge vectors to calculate the vertex angle 
     toPrev[0] = vertices[2*previousVertex] - vertices[2*i];
-    toPrev[1] = vertices[2*previousVertex] - vertices[2*i+1];
+    toPrev[1] = vertices[2*previousVertex+1] - vertices[2*i+1];
 
     toNext[0] = vertices[2*nextVertex] - vertices[2*i];
     toNext[1] = vertices[2*nextVertex+1] - vertices[2*i+1];
@@ -277,11 +277,14 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
       vertexAngleDeg = vertexAngleDeg + 360.0;
     }
 
+    //TODO
+    //Vertex extrusion height has to be maxDist. Find the side of such a triangle to pass as polygonExtent to extruder
+
     //Vertices with angles > 180 degrees are convex and require positive extrusions. Angles < 180 degrees denote concave vertices requiring negative extrusions. Angles of 180 degrees are flat and need no extrusions
     if(vertexAngleDeg > 180.0){
       //Get positive distance triangle coordinates
       getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
-
+    
       //Get the interection of the extrusion bounding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
 

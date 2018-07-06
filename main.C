@@ -14,10 +14,10 @@ int main(int argc, char** argv){
   int length = width * height;
 
   double xMin = -10.0;
-  double yMin =  -7.0;
+  double yMin =  -5.0;
 
   double xMax =  10.0;
-  double yMax =   3.0;
+  double yMax =   5.0;
 
   int left = 0;
   int right = 20;
@@ -37,7 +37,7 @@ int main(int argc, char** argv){
 
   double* sdf = (double*)malloc(length * sizeof(double));
   getSDF(sdf, xMin, yMin, dx, dy, left, right, bottom, top, vertices, numVertices, maxDistance);
-  for(int y = 0; y < height; y++){
+  for(int y = height-1; y >= 0; y--){
     for(int x = 0; x < width; x++){
     
       printf("%1.1f\t", sdf[y * width + x]);
