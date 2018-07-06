@@ -1,3 +1,7 @@
+
+#ifndef x2DSDF_H_
+#define x2DSDF_H_
+
 //Half plane test. Point is within rectangular extrusion if it is on the same side of all its edges
 bool pointInTriangle(double x, double y, double* trng_x, double* trng_y, double* normalA, double* normalB, double* normalC, double limit){
 
@@ -140,3 +144,6 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
     }
   }
 }
+
+#endif
+

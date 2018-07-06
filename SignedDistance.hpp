@@ -1,3 +1,10 @@
+
+#ifndef SIGNEDDISTANCE_H_
+#define SIGNEDDISTANCE_H_
+
+#include <cmath>
+#include "2DSDF.hpp"
+
 //Limits for small values
 const static double areaLimit = 1.0E-8;
 const static double zeroOffSet = 1.0E-6;
@@ -10,7 +17,7 @@ void overWriteInfinityKernel(double* sdf, double maxValue, int length){
 
   for(int idx = 0; idx < length; idx++){
     float dist = sdf[idx];
-    if(isinf(dist)){
+    if(std::isinf(dist)){
       if(dist > 0){
 	sdf[idx] = maxValue;
       }else{
@@ -339,3 +346,5 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int lef
 
   free(outwardNormals);
 }
+
+#endif
