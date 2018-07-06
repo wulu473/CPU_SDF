@@ -17,3 +17,7 @@ test: test.C
 .PHONY: clean
 clean:
 	rm -rf test main
+
+.PHONY: memtest
+memtest:
+	valgrind --leak-check=full --track-origins=yes ./main
