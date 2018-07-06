@@ -40,16 +40,11 @@ int main(int argc, char** argv){
   std::ofstream myfile;
   myfile.open ("sdf.dat");
 
-  //Coordinates of cell
-  double x_;
-  double y_;
-
   for(int y = 0; y < height-1; y++){
     for(int x = 0; x < width; x++){
-      y_ = yMin + y * dy + 0.5 * dy;
-      x_ = xMin + x * dx + 0.5 * dx;
 
       myfile << sdf[y * width + x] << " ";
+
     }
     myfile << "\n";
   }
