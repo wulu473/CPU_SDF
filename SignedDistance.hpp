@@ -1,3 +1,9 @@
+#include <stdlib.h>
+#include <limits>
+#include <cmath>
+#include <algorithm>
+#include "2DSDF.hpp"
+
 //Limits for small values
 const static double areaLimit = 1.0E-8;
 const static double zeroOffSet = 1.0E-6;
@@ -10,7 +16,7 @@ void overWriteInfinityKernel(double* sdf, double maxValue, int length){
 
   for(int idx = 0; idx < length; idx++){
     float dist = sdf[idx];
-    if(isinf(dist)){
+    if(std::isinf(dist)){
       if(dist > 0){
 	sdf[idx] = maxValue;
       }else{
@@ -129,8 +135,6 @@ void fillUnsetValues(double* sdf, int width, int height){
   }
 }
 
-
-
 void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double yMin, double xMax, double yMax, double* boundMin, double* boundMax, unsigned int vertices){
 
   boundMin[0] = std::numeric_limits<double>::infinity();
@@ -139,7 +143,7 @@ void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double y
   boundMax[0] = -std::numeric_limits<double>::infinity();
   boundMax[1] = -std::numeric_limits<double>::infinity();
 
-  for(int i = 0; i < vertices; i++){
+  for(unsigned int i = 0; i < vertices; i++){
     boundMin[0] = std::min(boundMin[0], rect_x[i]);
     boundMin[1] = std::min(boundMin[1], rect_y[i]);
 
@@ -233,10 +237,6 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
 
   //Epsilon for point-in-polygon test
   double limit = 0.01 * std::min(dx, dy);
-
-  //Coordinates of a vertex
-  double vertex_x;
-  double vertex_y;
 
   //Coordinates of vertices forming an edge
   double edge_x[2];
