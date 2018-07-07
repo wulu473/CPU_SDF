@@ -1,11 +1,6 @@
-#include <stdlib.h>
-#include <limits>
-#include <cmath>
 #include <stdio.h>
-#include <algorithm>
 #include <iostream>
 #include <fstream>
-#include "2DSDF.hpp"
 #include "SignedDistance.hpp"
 
 int main(int argc, char** argv){
