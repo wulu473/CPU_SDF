@@ -4,10 +4,6 @@
 #include <algorithm>
 #include "2DSDF.hpp"
 
-//Limits for small values
-const static double areaLimit = 1.0E-8;
-const static double zeroOffSet = 1.0E-6;
-
 //PI
 const static double PI = 3.14159265359;
 
@@ -36,6 +32,7 @@ void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
   }
 }
 
+//Sweep along rows and columns to fill in unset values in the interior of the geometry
 void fillUnsetValues(double* sdf, int width, int height){
 
   double previous = 1.0/0.0;
@@ -89,7 +86,7 @@ void fillUnsetValues(double* sdf, int width, int height){
   }
 
   for(int x = 0; x < width; x++){
-    //Left to right
+    //Bottom to top
     previous = 1.0/0.0;
     flip = false;
     for(int y = 0; y < height; y++){
@@ -111,7 +108,7 @@ void fillUnsetValues(double* sdf, int width, int height){
       }
     }
 
-    //Right to left
+    //Top to bottom
     previous = 1.0/0.0;
     flip = false;
     for(int y = (height-1); y >= 0; y--){
@@ -135,7 +132,8 @@ void fillUnsetValues(double* sdf, int width, int height){
   }
 }
 
-void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double yMin, double xMax, double yMax, double* boundMin, double* boundMax, unsigned int vertices){
+//Find the axis aligned bounding box around an extrusion and its intersection with the domain
+void getBoundingDimensions(double* poly_x, double* poly_y, double xMin, double yMin, double xMax, double yMax, double* boundMin, double* boundMax, unsigned int vertices, double maxDistance){
 
   boundMin[0] = std::numeric_limits<double>::infinity();
   boundMin[1] = std::numeric_limits<double>::infinity();
@@ -144,11 +142,20 @@ void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double y
   boundMax[1] = -std::numeric_limits<double>::infinity();
 
   for(unsigned int i = 0; i < vertices; i++){
-    boundMin[0] = std::min(boundMin[0], rect_x[i]);
-    boundMin[1] = std::min(boundMin[1], rect_y[i]);
+    boundMin[0] = std::min(boundMin[0], poly_x[i]);
+    boundMin[1] = std::min(boundMin[1], poly_y[i]);
 
-    boundMax[0] = std::max(boundMax[0], rect_x[i]);
-    boundMax[1] = std::max(boundMax[1], rect_y[i]);
+    boundMax[0] = std::max(boundMax[0], poly_x[i]);
+    boundMax[1] = std::max(boundMax[1], poly_y[i]);
+  }
+
+  //Limit a vertex bouding box by finding its intersection with the bounding box of a disc centred at the vertex
+  if(vertices == 3){
+    boundMin[0] = std::max(boundMin[0], poly_x[0] - maxDistance);
+    boundMin[1] = std::max(boundMin[1], poly_y[0] - maxDistance);
+
+    boundMax[0] = std::min(boundMax[0], poly_x[0] + maxDistance);
+    boundMax[1] = std::min(boundMax[1], poly_y[0] + maxDistance);
   }
 
   boundMin[0] = std::max(boundMin[0], xMin);
@@ -156,6 +163,7 @@ void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double y
 
   boundMax[0] = std::min(boundMax[0], xMax);
   boundMax[1] = std::min(boundMax[1], yMax);
+
 }
 
 //Find the extrusion of an edge. This is constructed by projecting the edge vertices in the normal direction. The vertices of the rectangle must be in a CCW order to produce inward pointing normals in the half-plane test later.
@@ -296,7 +304,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     getRectangleCoords(true, edge_x, edge_y, rect_x, rect_y, out_norm_x, out_norm_y, maxDistance);
 
     //Get the interection of the extrusion bounding volume and the domain
-    getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
+    getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4, maxDistance);
 
     //Find the indices of cells at the edges of the bounding volume intersection
     startX = std::floor((boundMin[0]-xMin)/dx); 
@@ -318,7 +326,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     getRectangleCoords(false, edge_x, edge_y, rect_x, rect_y, -out_norm_x, -out_norm_y, maxDistance);
 
     //Get the interection of the extrusion bounding volume and the domain
-    getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
+    getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4, maxDistance);
 
     //Find the indices of cells at the edges of the bounding volume intersection
     startX = std::floor((boundMin[0]-xMin)/dx); 
@@ -381,7 +389,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
 
       //Get the interection of the extrusion bounding volume and the domain
-      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
+      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3, maxDistance);
 
       //Find the indices of cells at the edges of the bounding volume intersection
       startX = std::floor((boundMin[0]-xMin)/dx); 
@@ -405,7 +413,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*i], -outwardNormals[2*i+1], -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], maxDistance);
 
       //Get the interection of the extrusion bounding volume and the domain
-      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
+      getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3, maxDistance);
 
       //Find the indices of cells at the edges of the bounding volume intersection
       startX = std::floor((boundMin[0]-xMin)/dx); 
@@ -430,7 +438,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
   //Sweep along rows and columns to fill in unset values
   fillUnsetValues(sdf, width, height);  
 
-  //Overwrite infinity with maxDist of correct signe
+  //Overwrite infinity with maxDist of correct sign
   overWriteInfinityKernel(sdf, maxDistance, length);
 
   //Optional
