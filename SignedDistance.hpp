@@ -26,7 +26,7 @@ void overWriteInfinityKernel(double* sdf, double maxValue, int length){
 void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
 
   for(int idx = 0; idx < length; idx++){
-    if(fabs(sdf[idx]) < minValue){
+    if(std::abs(sdf[idx]) < minValue){
       sdf[idx] = -minValue;
     }
   }
