@@ -1,6 +1,25 @@
-2D signed distance field generator functions
+2D signed distance field generator based on the CSC algorithm by Mauch:
+https://www.researchgate.net/profile/Sean_Mauch/publication/2393786_A_Fast_Algorithm_for_Computing_the_Closest_Point_and_Distance_Transform/links/0deec52aeaf24e5db5000000.pdf
 
-To compile: 
+The function getSDF can be called to find the narrow band SDF of any closed orientable polygon at the cell centres of a 2D Cartesian grid.
+The signature of the function in SignedDistance.hpp is given below:
+
+/**
+ *	Populate local cells with signed distance to geometry using the CSC algorithm
+ *	@param sdf pre-allcoated row-major pointer to SDF data at cell centres
+ *	@param xMin value at the leftmost edge of the local region
+ *	@param yMin value at the bottommost edge of the local region
+ *	@param dx cell length in x-dimension
+ *	@param dy cell length in y-dimension
+ *	@param width number of cells in x-dimension
+ *	@param height number of cells in y-dimension
+ *	@param vertices list of vertices in geometry [x0, y0, x1, y1, ... x(n-1), y(n-1)]
+ *	@param numVertices number of vertices in geometry
+ *	@param maxDist maximum distance of SDF
+ */
+void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int width, int height, const double* vertices, int numVertices, double maxDistance);
+
+To compile test case: 
   g++ main.C
 
-Produces data file "sdf.dat" which can be plotted by passing "plot_sdf.gp" to gnuplot
+The example code produces a data file "sdf.dat" which can be plotted by loading "plot_sdf.gp" in gnuplot
