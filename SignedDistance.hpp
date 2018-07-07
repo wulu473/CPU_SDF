@@ -32,10 +32,101 @@ void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
 
 void fillUnsetValues(double* sdf, int width, int height){
 
-  //TODO
-  //Travel along rows and the columns from left -> right and then right -> left
-  //Once you see a transition from positive to negative between element n and n+1, set signs of following values to negative, until there is a transition to positive, in which case switch to positive sign
+  double previous = 1.0/0.0;
+  double value;
+  bool flip;
 
+  for(int y = 0; y < height; y++){
+    //Left to right
+    previous = 1.0/0.0;
+    flip = false;
+    for(int x = 0; x < width; x++){
+      value = sdf[y * width + x];
+
+      if((previous < 0.0) && (std::isinf(value)) && !(std::isinf(previous))){
+	flip = true;
+      }
+
+      if((std::isinf(previous) && !(std::isinf(value)) && (value < 0.0))){
+	flip = false;
+      }
+
+      previous = value;
+
+      if((flip)&&(value > 0.0)){
+	//Fill with -inf
+	sdf[y * width + x] = -1.0/0.0;
+      }
+    }
+
+    //Right to left
+    previous = 1.0/0.0;
+    flip = false;
+    for(int x = (width-1); x >= 0; x--){
+      value = sdf[y * width + x];
+
+      if((previous < 0.0) && (std::isinf(value)) && !(std::isinf(previous))){
+	flip = true;
+      }
+
+      if((std::isinf(previous) && !(std::isinf(value)) && (value < 0.0))){
+	flip = false;
+      }
+
+      previous = value;
+
+      if((flip)&&(value > 0.0)){
+	//Fill with -inf
+	sdf[y * width + x] = -1.0/0.0;
+      }
+    }
+  }
+
+  for(int x = 0; x < width; x++){
+    //Left to right
+    previous = 1.0/0.0;
+    flip = false;
+    for(int y = 0; y < height; y++){
+      value = sdf[y * width + x];
+
+      if((previous < 0.0) && (std::isinf(value)) && !(std::isinf(previous))){
+	flip = true;
+      }
+
+      if((std::isinf(previous) && !(std::isinf(value)) && (value < 0.0))){
+	flip = false;
+      }
+
+      previous = value;
+
+      if((flip)&&(value > 0.0)){
+	//Fill with -inf
+	sdf[y * width + x] = -1.0/0.0;
+      }
+    }
+
+    //Right to left
+    previous = 1.0/0.0;
+    flip = false;
+    for(int y = (height-1); y >= 0; y--){
+      value = sdf[y * width + x];
+
+      if((previous < 0.0) && (std::isinf(value)) && !(std::isinf(previous))){
+	flip = true;
+      }
+
+      if((std::isinf(previous) && !(std::isinf(value)) && (value < 0.0))){
+	flip = false;
+      }
+
+      previous = value;
+
+      if((flip)&&(value > 0.0)){
+	//Fill with -inf
+	sdf[y * width + x] = -1.0/0.0;
+      }
+    }
+  }
 }
 
 
@@ -63,6 +154,7 @@ void getBoundingDimensions(double* rect_x, double* rect_y, double xMin, double y
   boundMax[1] = std::min(boundMax[1], yMax);
 }
 
+//Find the extrusion of an edge. This is constructed by projecting the edge vertices in the normal direction. The vertices of the rectangle must be in a CCW order to produce inward pointing normals in the half-plane test later.
 void getRectangleCoords(bool positive, double* edge_x, double* edge_y, double* rect_x, double* rect_y, double nx, double ny, double polygonExtent){
 
   //First two coordinates of the rectangle are just the edge co-ordinates
@@ -85,33 +177,24 @@ void getRectangleCoords(bool positive, double* edge_x, double* edge_y, double* r
   rect_y[3] = rect_y[0] + polygonExtent * ny;
 }
 
-void getTriangleCoords(bool positive, double vertex_x, double vertex_y, double* trng_x, double* trng_y, double n0_x, double n0_y, double n1_x, double n1_y, double maxDistance){
+//Find the extrusion of a vertex. This is constructed by projecting the vertex in the normal directions of the edges that meet at the vertex. The vertices of the triangle must be in a CCW order to produce inward pointing normals in the half-plane test later
+void getTriangleCoords(double vertex_x, double vertex_y, double* trng_x, double* trng_y, double n0_x, double n0_y, double n1_x, double n1_y, double maxDistance){
 
+  //Find the angle between the normals
   double angle = atan2(((n1_x * n0_y) - (n0_x * n1_y)), (n0_x*n1_x + n0_y*n1_y));
 
   //Side of triangle with height maxDistance
   double polygonExtent = maxDistance / std::cos(angle/2.0); 
 
+  //The first element of the triangle is the vertex itself
   trng_x[0] = vertex_x;
   trng_y[0] = vertex_y;
 
-  if(positive){
+  trng_x[1] = trng_x[0] + polygonExtent * n1_x; 
+  trng_y[1] = trng_y[0] + polygonExtent * n1_y;
 
-    trng_x[1] = trng_x[0] + polygonExtent * n1_x; 
-    trng_y[1] = trng_y[0] + polygonExtent * n1_y;
-
-    trng_x[2] = trng_x[0] + polygonExtent * n0_x; 
-    trng_y[2] = trng_y[0] + polygonExtent * n0_y;
-
-  }else{
-
-    trng_x[1] = trng_x[0] + polygonExtent * n0_x; 
-    trng_y[1] = trng_y[0] + polygonExtent * n0_y;
-
-    trng_x[2] = trng_x[0] + polygonExtent * n1_x; 
-    trng_y[2] = trng_y[0] + polygonExtent * n1_y;
-  
-  }
+  trng_x[2] = trng_x[0] + polygonExtent * n0_x; 
+  trng_y[2] = trng_y[0] + polygonExtent * n0_y;
 }
 
 /**
@@ -121,8 +204,8 @@ void getTriangleCoords(bool positive, double vertex_x, double vertex_y, double* 
  *	@param yMin value at the bottommost edge of the local region
  *	@param dx cell length in x-dimension
  *	@param dy cell length in y-dimension
- *	@param width number of cells in x-direction
- *	@param height number of cells in y-direction
+ *	@param width number of cells in x-dimension
+ *	@param height number of cells in y-dimension
  *	@param vertices list of vertices in geometry [x0, y0, x1, y1, ... x(n-1), y(n-1)]
  *	@param numVertices number of vertices in geometry
  *	@param maxDist maximum distance of SDF
@@ -135,7 +218,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
   //Local incideces for the limits of extrusion bounding volumes
   int startX;
   int startY;
-  
+
   int endX;
   int endY;
 
@@ -209,10 +292,6 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     outwardNormals[i]   = out_norm_x;
     outwardNormals[i+1] = out_norm_y;
 
-    //Calculate inward unit normal for edge
-    double in_norm_x = -out_norm_x; 
-    double in_norm_y = -out_norm_y;
-
     //Get positive edge extrusion coordinates
     getRectangleCoords(true, edge_x, edge_y, rect_x, rect_y, out_norm_x, out_norm_y, maxDistance);
 
@@ -236,7 +315,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     }
 
     //Get negative edge extrusion coordinates
-    getRectangleCoords(false, edge_x, edge_y, rect_x, rect_y, in_norm_x, in_norm_y, maxDistance);
+    getRectangleCoords(false, edge_x, edge_y, rect_x, rect_y, -out_norm_x, -out_norm_y, maxDistance);
 
     //Get the interection of the extrusion bounding volume and the domain
     getBoundingDimensions(rect_x, rect_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 4);
@@ -299,8 +378,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     //Vertices with angles > 180 degrees are convex and require positive extrusions. Angles < 180 degrees denote concave vertices requiring negative extrusions. Angles of 180 degrees are flat and need no extrusions
     if(vertexAngleDeg > 180.0){
       //Get positive distance triangle coordinates
-      getTriangleCoords(true, vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
-    
+      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, outwardNormals[2*previousVertex], outwardNormals[2*previousVertex+1], outwardNormals[2*i], outwardNormals[2*i+1], maxDistance);
+
       //Get the interection of the extrusion bounding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
 
@@ -317,12 +396,13 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
 	//Update positive distances for grid points in vertex rectangle
-	setVertexSDF(true, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit * 10.0);
+	setVertexSDF(true, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit);
       }
 
     }else if(vertexAngleDeg < 180.0){
       //Get negative distance triangle coordinates
-      getTriangleCoords(false, vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], -outwardNormals[2*i], -outwardNormals[2*i+1], maxDistance);
+      //previous->i->next is switched wrt positive normals
+      getTriangleCoords(vertices[2*i], vertices[2*i+1], trng_x, trng_y, -outwardNormals[2*i], -outwardNormals[2*i+1], -outwardNormals[2*previousVertex], -outwardNormals[2*previousVertex+1], maxDistance);
 
       //Get the interection of the extrusion bounding volume and the domain
       getBoundingDimensions(trng_x, trng_y, xMin, yMin, xMax, yMax, boundMin, boundMax, 3);
@@ -340,7 +420,7 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
 	//Update negative distances for grid points in vertex rectangle
-	setVertexSDF(false, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit * 10.0);
+	setVertexSDF(false, sdf, trng_x, trng_y, xMin, yMin, startX, startY, endX, endY, width, dx, dy, maxDistance, limit);
       }
     }
   }
@@ -348,10 +428,10 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
   //sdf has distance values from all edge and vertex extrusions
 
   //Sweep along rows and columns to fill in unset values
-  //fillUnsetValues(sdf, width, height);  
+  fillUnsetValues(sdf, width, height);  
 
   //Overwrite infinity with maxDist of correct signe
-  //overWriteInfinityKernel(sdf, maxDistance, length);
+  overWriteInfinityKernel(sdf, maxDistance, length);
 
   //Optional
   //overWriteSmallSDFKernel(sdf, minValue, length);

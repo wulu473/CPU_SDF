@@ -61,7 +61,7 @@ void setEdgeSDF(bool positive, double* sdf, double* rect_x, double* rect_y, doub
   getLineNormal(normC, rect_x[2], rect_y[2], rect_x[3], rect_y[3]);
   getLineNormal(normD, rect_x[3], rect_y[3], rect_x[0], rect_y[0]);
 
-  //Coordinates of current cell
+  //Coordinates of current cell centre
   double x_;
   double y_;
 
@@ -74,9 +74,10 @@ void setEdgeSDF(bool positive, double* sdf, double* rect_x, double* rect_y, doub
 
       //If cell is in extrusion
       if(pointInRectangle(x_, y_, rect_x, rect_y, normA, normB, normC, normD, limit)){
-	//Find distance to edge
-	double dist = (normA[0] * (rect_x[0]-x_) + (normA[1]) * (rect_y[0]-y_));
-	if(positive){
+	//Find distance to edge using the edge normal and a vetor from one end point to the cell centre
+	double dist = (normA[0] * (x_-rect_x[0]) + (normA[1]) * (y_-rect_y[0]));
+	//Flip sign for negative extrusions
+	if(!positive){
 	  dist = -dist;
 	}
 	//If distance has small enough magnitude
@@ -104,13 +105,15 @@ void setVertexSDF(bool positive, double* sdf, double* trng_x, double* trng_y, do
   getLineNormal(normB, trng_x[1], trng_y[1],trng_x[2], trng_y[2]);
   getLineNormal(normC, trng_x[2], trng_y[2],trng_x[0], trng_y[0]);
 
-  //Coordinates of current cell
+  //Coordinates of current cell centre
   double x_;
   double y_;
  
   //Sign of distance 
   int sign;
-
+  
+  //Distance calculation always produces a positive value. 
+  //Distinguish between interior and exterior extrusion signs
   if(positive){
     sign = 1;
   }else{

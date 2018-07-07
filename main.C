@@ -24,7 +24,7 @@ int main(int argc, char** argv){
   double dx = (xMax - xMin) / (double)width;
   double dy = (yMax - yMin) / (double)height;
 
-  double maxDistance = 1.0;
+  double maxDistance = 0.5;
 
   double vertices[8] = {-4,-2,
                          0,3,
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
   std::ofstream myfile;
   myfile.open ("sdf.dat");
 
-  for(int y = 0; y < height-1; y++){
+  for(int y = 0; y < height; y++){
     for(int x = 0; x < width; x++){
 
       myfile << sdf[y * width + x] << " ";
