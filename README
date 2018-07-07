@@ -19,7 +19,11 @@ The signature of the function in SignedDistance.hpp is given below:
  */
 void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int width, int height, const double* vertices, int numVertices, double maxDistance);
 
-To compile test case: 
+To build and run test cases: 
+  make
+  ./test
+
+To compile example case: 
   g++ main.cpp
 
 The example code produces a data file "sdf.dat" which can be plotted by loading "plot_sdf.gp" in gnuplot
