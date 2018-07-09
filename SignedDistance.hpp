@@ -27,9 +27,10 @@ void overWriteInfinityKernel(double* sdf, double maxValue, int length){
       }
     }
   }
+
 }
 
-//Overwrite values that have amagnitude below some threshold
+//Overwrite values that have a magnitude below some threshold
 void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
 
   for(int idx = 0; idx < length; idx++){
@@ -165,6 +166,7 @@ void getBoundingDimensions(double* poly_x, double* poly_y, double xMin, double y
     boundMax[1] = std::min(boundMax[1], poly_y[0] + maxDistance);
   }
 
+  //Clip bounding volume to the edges of the domain
   boundMin[0] = std::max(boundMin[0], xMin);
   boundMin[1] = std::max(boundMin[1], yMin);
 
@@ -273,8 +275,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
   double boundMax[2];
 
   //Dimensions of extrusion bounding volume
-  int b_width;
-  int b_height;
+  double b_width;
+  double b_height;
 
   //sdf is infinity everywhere
 
@@ -317,11 +319,11 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     startX = std::floor((boundMin[0]-xMin)/dx); 
     startY = std::floor((boundMin[1]-yMin)/dy); 
 
-    endX = std::ceil((boundMax[0]-xMin)/dx); 
-    endY = std::ceil((boundMax[1]-yMin)/dy);  
+    endX = std::floor((boundMax[0]-xMin)/dx); 
+    endY = std::floor((boundMax[1]-yMin)/dy);  
 
-    b_width = endX - startX;
-    b_height = endY - startY;
+    b_width = boundMax[0] - boundMin[0];
+    b_height = boundMax[1] - boundMin[1];
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
@@ -339,11 +341,11 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     startX = std::floor((boundMin[0]-xMin)/dx); 
     startY = std::floor((boundMin[1]-yMin)/dy); 
 
-    endX = std::ceil((boundMax[0]-xMin)/dx); 
-    endY = std::ceil((boundMax[1]-yMin)/dy);  
+    endX = std::floor((boundMax[0]-xMin)/dx); 
+    endY = std::floor((boundMax[1]-yMin)/dy);  
 
-    b_width = endX - startX;
-    b_height = endY - startY;
+    b_width = boundMax[0] - boundMin[0];
+    b_height = boundMax[1] - boundMin[1];
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
@@ -402,11 +404,11 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       startX = std::floor((boundMin[0]-xMin)/dx); 
       startY = std::floor((boundMin[1]-yMin)/dy); 
 
-      endX = std::ceil((boundMax[0]-xMin)/dx); 
-      endY = std::ceil((boundMax[1]-yMin)/dy);  
+      endX = std::floor((boundMax[0]-xMin)/dx); 
+      endY = std::floor((boundMax[1]-yMin)/dy);  
 
-      b_width = endX - startX;
-      b_height = endY - startY;
+      b_width = boundMax[0] - boundMin[0];
+      b_height = boundMax[1] - boundMin[1];
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
@@ -426,11 +428,11 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       startX = std::floor((boundMin[0]-xMin)/dx); 
       startY = std::floor((boundMin[1]-yMin)/dy); 
 
-      endX = std::ceil((boundMax[0]-xMin)/dx); 
-      endY = std::ceil((boundMax[1]-yMin)/dy);  
+      endX = std::floor((boundMax[0]-xMin)/dx); 
+      endY = std::floor((boundMax[1]-yMin)/dy);  
 
-      b_width = endX - startX;
-      b_height = endY - startY;
+      b_width = boundMax[0] - boundMin[0];
+      b_height = boundMax[1] - boundMin[1];
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
