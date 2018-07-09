@@ -43,13 +43,13 @@ void overWriteSmallSDFKernel(double* sdf, double minValue, int length){
 //Sweep along rows and columns to fill in unset values in the interior of the geometry
 void fillUnsetValues(double* sdf, int width, int height){
 
-  double previous = 1.0/0.0;
+  double previous = std::numeric_limits<double>::infinity();
   double value;
   bool flip;
 
   for(int y = 0; y < height; y++){
     //Left to right
-    previous = 1.0/0.0;
+    previous = std::numeric_limits<double>::infinity();
     flip = false;
     for(int x = 0; x < width; x++){
       value = sdf[y * width + x];
@@ -66,12 +66,12 @@ void fillUnsetValues(double* sdf, int width, int height){
 
       if((flip)&&(value > 0.0)){
 	//Fill with -inf
-	sdf[y * width + x] = -1.0/0.0;
+	sdf[y * width + x] = -std::numeric_limits<double>::infinity();
       }
     }
 
     //Right to left
-    previous = 1.0/0.0;
+    previous = std::numeric_limits<double>::infinity();
     flip = false;
     for(int x = (width-1); x >= 0; x--){
       value = sdf[y * width + x];
@@ -88,14 +88,14 @@ void fillUnsetValues(double* sdf, int width, int height){
 
       if((flip)&&(value > 0.0)){
 	//Fill with -inf
-	sdf[y * width + x] = -1.0/0.0;
+	sdf[y * width + x] = -std::numeric_limits<double>::infinity();
       }
     }
   }
 
   for(int x = 0; x < width; x++){
     //Bottom to top
-    previous = 1.0/0.0;
+    previous = std::numeric_limits<double>::infinity();
     flip = false;
     for(int y = 0; y < height; y++){
       value = sdf[y * width + x];
@@ -112,12 +112,12 @@ void fillUnsetValues(double* sdf, int width, int height){
 
       if((flip)&&(value > 0.0)){
 	//Fill with -inf
-	sdf[y * width + x] = -1.0/0.0;
+	sdf[y * width + x] = -std::numeric_limits<double>::infinity();
       }
     }
 
     //Top to bottom
-    previous = 1.0/0.0;
+    previous = std::numeric_limits<double>::infinity();
     flip = false;
     for(int y = (height-1); y >= 0; y--){
       value = sdf[y * width + x];
@@ -134,7 +134,7 @@ void fillUnsetValues(double* sdf, int width, int height){
 
       if((flip)&&(value > 0.0)){
 	//Fill with -inf
-	sdf[y * width + x] = -1.0/0.0;
+	sdf[y * width + x] = -std::numeric_limits<double>::infinity();
       }
     }
   }
