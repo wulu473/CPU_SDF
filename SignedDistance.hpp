@@ -319,8 +319,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     startX = std::floor((boundMin[0]-xMin)/dx); 
     startY = std::floor((boundMin[1]-yMin)/dy); 
 
-    endX = std::floor((boundMax[0]-xMin)/dx); 
-    endY = std::floor((boundMax[1]-yMin)/dy);  
+    endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
+    endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
     b_width = boundMax[0] - boundMin[0];
     b_height = boundMax[1] - boundMin[1];
@@ -341,8 +341,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     startX = std::floor((boundMin[0]-xMin)/dx); 
     startY = std::floor((boundMin[1]-yMin)/dy); 
 
-    endX = std::floor((boundMax[0]-xMin)/dx); 
-    endY = std::floor((boundMax[1]-yMin)/dy);  
+    endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
+    endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
     b_width = boundMax[0] - boundMin[0];
     b_height = boundMax[1] - boundMin[1];
@@ -404,8 +404,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       startX = std::floor((boundMin[0]-xMin)/dx); 
       startY = std::floor((boundMin[1]-yMin)/dy); 
 
-      endX = std::floor((boundMax[0]-xMin)/dx); 
-      endY = std::floor((boundMax[1]-yMin)/dy);  
+      endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
+      endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
       b_width = boundMax[0] - boundMin[0];
       b_height = boundMax[1] - boundMin[1];
@@ -428,8 +428,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       startX = std::floor((boundMin[0]-xMin)/dx); 
       startY = std::floor((boundMin[1]-yMin)/dy); 
 
-      endX = std::floor((boundMax[0]-xMin)/dx); 
-      endY = std::floor((boundMax[1]-yMin)/dy);  
+      endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
+      endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
       b_width = boundMax[0] - boundMin[0];
       b_height = boundMax[1] - boundMin[1];
