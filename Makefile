@@ -1,16 +1,15 @@
-
-main: main.C
+main: main.cpp
 	@echo "Compiling..."
 	g++-6 -O0 -g -Wextra  -Wall -pedantic -std=c++11 \
 		$^ -o $@
 	@echo "done"
 
-main.C: SignedDistance.hpp 2DSDF.hpp
+main.cpp: SignedDistance.hpp 2DSDF.hpp
 
 .PHONY: all
 all: main test
 
-test: test.C
+test: test.cpp
 	@echo "Compiling..."
 	g++-6 -O0 -g -Wextra  -Wall -pedantic -std=c++11 \
 	       	-I/lsc/opt/modules/gcc-6.4.0/boost-1.63.0/include/ \
@@ -18,7 +17,7 @@ test: test.C
 		-lboost_unit_test_framework -L/lsc/opt/modules/gcc-6.4.0/boost-1.61.0/lib  
 	@echo "done"
 
-test.C: SignedDistance.hpp 2DSDF.hpp
+test.cpp: SignedDistance.hpp 2DSDF.hpp
 
 .PHONY: clean
 clean:
@@ -27,3 +26,4 @@ clean:
 .PHONY: memtest
 memtest:
 	valgrind --leak-check=full --track-origins=yes ./main
+
