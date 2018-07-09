@@ -322,8 +322,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     endX = std::floor((boundMax[0]-xMin)/dx); 
     endY = std::floor((boundMax[1]-yMin)/dy);  
 
-    b_width = boundMax[0] - boundMax[0];
-    b_height = boundMax[1] - boundMax[1];
+    b_width = boundMax[0] - boundMin[0];
+    b_height = boundMax[1] - boundMin[1];
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
@@ -344,8 +344,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     endX = std::floor((boundMax[0]-xMin)/dx); 
     endY = std::floor((boundMax[1]-yMin)/dy);  
 
-    b_width = boundMax[0] - boundMax[0];
-    b_height = boundMax[1] - boundMax[1];
+    b_width = boundMax[0] - boundMin[0];
+    b_height = boundMax[1] - boundMin[1];
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
@@ -407,8 +407,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       endX = std::floor((boundMax[0]-xMin)/dx); 
       endY = std::floor((boundMax[1]-yMin)/dy);  
 
-      b_width = boundMax[0] - boundMax[0];
-      b_height = boundMax[1] - boundMax[1];
+      b_width = boundMax[0] - boundMin[0];
+      b_height = boundMax[1] - boundMin[1];
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
@@ -431,8 +431,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       endX = std::floor((boundMax[0]-xMin)/dx); 
       endY = std::floor((boundMax[1]-yMin)/dy);  
 
-      b_width = boundMax[0] - boundMax[0];
-      b_height = boundMax[1] - boundMax[1];
+      b_width = boundMax[0] - boundMin[0];
+      b_height = boundMax[1] - boundMin[1];
 
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
