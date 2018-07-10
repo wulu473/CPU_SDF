@@ -64,7 +64,7 @@ double distance2(const double x, const double y)
                      2,2,
                      2,0};
 
-  std::shared_ptr<double> sdf = std::shared_ptr<double>();
+  std::shared_ptr<double> sdf = std::make_shared<double>();
   getSDF(sdf.get(),x-0.5,y-0.5,1.0,1.0,1,1,poly,5,100);
   return -(*sdf);
 }
