@@ -7,6 +7,8 @@
 #include <algorithm>
 #include "2DSDF.hpp"
 
+#define DEBUG
+
 //Limits for small values
 const static double areaLimit = 1.0E-8;
 const static double zeroOffSet = 1.0E-6;
@@ -140,16 +142,27 @@ void fillUnsetValues(double* sdf, int width, int height){
   }
 }
 
-//Find the axis aligned bounding box around an extrusion and its intersection with the domain
-void getBoundingDimensions(double* poly_x, double* poly_y, double xMin, double yMin, double xMax, double yMax, double* boundMin, double* boundMax, unsigned int vertices, double maxDistance){
+// Return the index of the cell of which lower left corner is closest to x
+void coordToIndex(const double x, const double y,
+    const double xMin, const double yMin, const double dx, const double dy,
+    int* i, int* j)
+{
+  *i = round((x - xMin)/dx);
+  *j = round((y - yMin)/dy);
+}
 
-  boundMin[0] = std::numeric_limits<double>::infinity();
-  boundMin[1] = std::numeric_limits<double>::infinity();
+// Find the axis aligned bounding box around an extrusion and its intersection with the domain
+void getBoundingDimensions(const double* poly_x, const double* poly_y,
+    const double xMin, const double yMin, const double xMax, const double yMax,
+    double* boundMin, double* boundMax, const unsigned int vertices, const double maxDistance) {
 
-  boundMax[0] = -std::numeric_limits<double>::infinity();
-  boundMax[1] = -std::numeric_limits<double>::infinity();
+  boundMin[0] = std::numeric_limits<double>::max();
+  boundMin[1] = std::numeric_limits<double>::max();
 
-  for(unsigned int i = 0; i < vertices; i++){
+  boundMax[0] = -std::numeric_limits<double>::max();
+  boundMax[1] = -std::numeric_limits<double>::max();
+
+  for(unsigned int i = 0; i < vertices; i++) {
     boundMin[0] = std::min(boundMin[0], poly_x[i]);
     boundMin[1] = std::min(boundMin[1], poly_y[i]);
 
@@ -172,7 +185,6 @@ void getBoundingDimensions(double* poly_x, double* poly_y, double xMin, double y
 
   boundMax[0] = std::min(boundMax[0], xMax);
   boundMax[1] = std::min(boundMax[1], yMax);
-
 }
 
 //Find the extrusion of an edge. This is constructed by projecting the edge vertices in the normal direction. The vertices of the rectangle must be in a CCW order to produce inward pointing normals in the half-plane test later.
@@ -231,10 +243,12 @@ void getTriangleCoords(double vertex_x, double vertex_y, double* trng_x, double*
  *	@param numVertices number of vertices in geometry
  *	@param maxDist maximum distance of SDF
  */
-void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int width, int height, const double* vertices, int numVertices, double maxDistance){
+void getSDF(double* sdf, const double xMin, const double yMin, const double dx, const double dy,
+    const int width, const int height, const double* vertices, const int numVertices,
+    const double maxDistance) {
 
   //Number of cells in local domain
-  int length = width * height;
+  const int length = width * height;
 
   //Local incideces for the limits of extrusion bounding volumes
   int startX;
@@ -244,8 +258,8 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
   int endY;
 
   //Maximum limits of the local domain
-  double xMax = xMin + width * dx;
-  double yMax = yMin + height * dy;
+  const double xMax = xMin + width * dx;
+  const double yMax = yMin + height * dy;
 
   //Initialise all values in sdf to inf
   for(int i = 0; i < length; i++){
@@ -322,8 +336,20 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
     endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
+    coordToIndex(boundMin[0],boundMin[1],xMin,yMin,dx,dy,&startX,&startY);
+    coordToIndex(boundMax[0],boundMax[1],xMin,yMin,dx,dy,&endX,&endY);
+    endX--; // Alo chose the loops to be inclusive so decrement by one here
+    endY--;
+
     b_width = boundMax[0] - boundMin[0];
     b_height = boundMax[1] - boundMin[1];
+
+#ifdef DEBUG
+    assert(startX >= 0);
+    assert(startY >= 0);
+    assert(endX < width);
+    assert(endY < height);
+#endif
 
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
@@ -344,9 +370,20 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
     endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
     endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
+    coordToIndex(boundMin[0],boundMin[1],xMin,yMin,dx,dy,&startX,&startY);
+    coordToIndex(boundMax[0],boundMax[1],xMin,yMin,dx,dy,&endX,&endY);
+    endX--; // Alo chose the loops to be inclusive so decrement by one here
+    endY--;
+
     b_width = boundMax[0] - boundMin[0];
     b_height = boundMax[1] - boundMin[1];
 
+#ifdef DEBUG
+    assert(startX >= 0);
+    assert(startY >= 0);
+    assert(endX < width);
+    assert(endY < height);
+#endif
     //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
     if((b_width > 0) && (b_height > 0)){
       //Update negative distances for grid points in edge rectangle
@@ -407,9 +444,20 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
       endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
+      coordToIndex(boundMin[0],boundMin[1],xMin,yMin,dx,dy,&startX,&startY);
+      coordToIndex(boundMax[0],boundMax[1],xMin,yMin,dx,dy,&endX,&endY);
+      endX--; // Alo chose the loops to be inclusive so decrement by one here
+      endY--;
+
       b_width = boundMax[0] - boundMin[0];
       b_height = boundMax[1] - boundMin[1];
 
+#ifdef DEBUG
+    assert(startX >= 0);
+    assert(startY >= 0);
+    assert(endX < width);
+    assert(endY < height);
+#endif
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
 	//Update positive distances for grid points in vertex rectangle
@@ -431,9 +479,20 @@ void getSDF(double* sdf, double xMin, double yMin, double dx, double dy, int wid
       endX = std::ceil((boundMax[0]-xMin)/dx)-1; 
       endY = std::ceil((boundMax[1]-yMin)/dy)-1;  
 
+      coordToIndex(boundMin[0],boundMin[1],xMin,yMin,dx,dy,&startX,&startY);
+      coordToIndex(boundMax[0],boundMax[1],xMin,yMin,dx,dy,&endX,&endY);
+      endX--; // Alo chose the loops to be inclusive so decrement by one here
+      endY--;
+
       b_width = boundMax[0] - boundMin[0];
       b_height = boundMax[1] - boundMin[1];
 
+#ifdef DEBUG
+    assert(startX >= 0);
+    assert(startY >= 0);
+    assert(endX < width);
+    assert(endY < height);
+#endif
       //If there is overlap between local and extrusion bounding volumes, do distance calculation for cells in that intersection
       if((b_width > 0) && (b_height > 0)){
 	//Update negative distances for grid points in vertex rectangle
