@@ -267,7 +267,8 @@ void getSDF(double* sdf, const double xMin, const double yMin, const double dx, 
   }
 
   //Epsilon for point-in-polygon test
-  double limit = 0.01 * std::min(dx, dy);
+//  double limit = 0.01 * std::min(dx, dy);
+  double limit = 100*maxDistance*std::numeric_limits<double>::epsilon();
 
   //Coordinates of vertices forming an edge
   double edge_x[2];
